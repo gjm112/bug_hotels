@@ -6,6 +6,9 @@ cong <- read.csv("/Users/gregorymatthews/Dropbox/bug_hotels/data/cong_master.csv
 #Remove the DO outliers
 cong <- cong %>% filter(DO_mg_L <= 20)
 
+
+#Model variable selection.  Must be in model: Tot_veg_pct and Water_depth_cm
+#Add Tot_veg_pct and Water_depth_cm and Water_Temp_C and Veg_H (richness and evenness)
 cong <- cong %>% select(Date, Site, Plot, Week, Treatment, Lat, Long,
                         Inv_abun, Collector, Shredder, Piercer, Scraper, Predator,DO_mg_L )
 
@@ -67,6 +70,9 @@ Y <- as.matrix(Y)
 Y <- matrix(as.integer(Y),nrow = nrow(Y), ncol = ncol(Y))
 #Creating the design matrix
 #Meadow is baseline
+################################################################################
+#Submerged is a better choice for baseline!!!!
+################################################################################
 X <- cong %>% select(I_submerged, I_tyhyd, I_typha,DO_mg_L, I_week)
 #X <- cong %>% select(I_meadow,I_submerged, I_tyhyd, I_typha,DO_mg_L)
 X <- data.frame(int = 1,as.matrix(X))
@@ -83,6 +89,7 @@ library(rjags)
 ####################################
 #Fixed and random effects
 ####################################
+
 data <- list(
   N = nrow(Y), # Number of observations
   J = ncol(Y),        # Number of classes
@@ -174,6 +181,10 @@ sigma2b ~  dnorm(0, 0.001)T(0,10000)
 
 }"
 
+#Look at all the paired comparisons. 
+# Look at computing evenness score for each draw and then getting a distribution for evenness.  
+#compute Shannon-Weaver index which is just entropy.  
+
 
 setwd("/Users/gregorymatthews/Dropbox/CDSC/bug_hotels/")
 write(model_string,"bug_hotels.bug")
@@ -191,6 +202,9 @@ ztest <- jags.samples(jags,c('beta','p','b',"sigma2b"),1000, thin = 1)
 z <- jags.samples(jags,c('beta','p','b',"sigma2b"),200000, thin = 200)
 
 save(z, file = "/Users/gregorymatthews/Dropbox/bug_hotels/z.RData")
+
+
+
 
 #Check convergence. 
 i <- 1
@@ -222,6 +236,8 @@ str(z$beta)
 newX <- X[1:4,]
 newX$DO_mg_L <- mean(X$DO_mg_L)
 diag(newX[2:4,2:4]) <- 1
+
+
 
 #4 treatments, 5 categories 
 results1 <- results2 <- results3 <- list()
