@@ -28,7 +28,7 @@ A Bayesian multinomial mixed effects model was fit to the data with the
 Let $Y_{ijt}$ be the $i$-th observation with $i = 1, cdots, 32$ of the count of the insects/big/whatever the fuck in category $j = 1, \cdots, J$ at time $t = 1, \cdots, T$ where $J =5$ and $T = 2$.  
 
 $$
-Y_{i.t} \sim Multinomial(n_{it},p_{it})
+Y_{i.t} \sim MN(n_{it},p_{it})
 $$
 
 $$
@@ -39,7 +39,7 @@ $$
 p_{iJt} = \frac{1}{1 + \sum_{j = 1}^{J-1} \theta_{ijt}}
 $$
 $$
-log(\theta_{ijt}) =  X_{it}\beta_{j} + b_{ij}
+\log(\theta_{ijt}) =  X_{it}\beta_{j} + b_{ij}
 $$
 for $j = 1, \cdots, J-1$.  Where $X_{it}$ is a $p$ dimensional vector  containing the covariates included in the model (with leading term 1 to account for the intercept) of the for site $i$ at time $t$, $beta_j$ is a $p$ dimensional vectors (including the intercept term), and $b_{ij}$ is a random intercept for category $j$ at site $i$. Covariates include in the model were indicators for treatment (with submerged chosen as the baseline level), Water temperature, Veg_H, and an indicator for week (with week 1 chosen as baseline).  
 
