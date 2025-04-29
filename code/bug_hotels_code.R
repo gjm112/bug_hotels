@@ -1,3 +1,4 @@
+#Manuscript: https://loyolauniversitychicago.sharepoint.com/:w:/r/sites/TeamTyphaSP23-WI24/_layouts/15/Doc.aspx?sourcedoc=%7B4DCE1BDD-6EE8-4A4B-A3CE-1A86352890AB%7D&file=Manuscript_WorkingDraft_10_17_24.docx&action=default&mobileredirect=true
 library(rjags)
 library(ggmosaic)
 library(tidyverse)

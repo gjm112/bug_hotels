@@ -3,18 +3,26 @@ title: "Bug Hotels"
 author: "Gregory J. Matthews"
 date: "2024-04-29"
 output: pdf_document
+editor_options: 
+  markdown: 
+    wrap: 72
 ---
+
+<!-- Manuscript: https://loyolauniversitychicago.sharepoint.com/:w:/r/sites/TeamTyphaSP23-WI24/_layouts/15/Doc.aspx?sourcedoc=%7B4DCE1BDD-6EE8-4A4B-A3CE-1A86352890AB%7D&file=Manuscript_WorkingDraft_10_17_24.docx&action=default&mobileredirect=true -->
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# Data 
-Data was collected at 32 total sites with 8 sites each belonging to one of the four treatments (meadow, submerged, typha, tyhyd).  Each individual site was visited twice in 2020: once in late July (July 27-29) and again in early September (September 8-11).  At each site for each visit, a sample of insects at each site was collected and the type of insects was recorded.  Each of these insects was grouped into one of five different categories (i.e. Collector, Shredder, Piercer, Scraper, Predator).  The main analysis of interest is looking for differences in the proportions of these categories at the four different types of sites (meadow, submerged, typha, tyhyd).  
+# Data
 
-Two measurements were dropped due to inaccurate oxygen level readings (DO_mg_L 22.7 and 22.3).  Both of these readings were taken on Septemeber 10, 2020 about 45 minutes apart and both dropped readings were from the treatment meadow.   This means that all treatments and time points have 8 measurements each except for meadow at the second time point which has only 6 measurements because of the readings dropped based on inaccurate oxygen level readings.  This leaves us with a total of 62 observations that were ultimately used for analysis.  
+Data was collected at 32 total sites with 8 sites each belonging to one of the four treatments (meadow, submerged, typha, tyhyd). Each individual site was visited twice in 2020: once in late July (July 27-29) and again in early September (September 8-11). At each site for each visit, a sample of insects at each site was collected and the type of insects was recorded. Each of these insects was grouped into one of five different categories (i.e. Collector, Shredder, Piercer, Scraper, Predator). The main analysis of interest is looking for differences inthe proportions of these categories at the four different types of sites (meadow, submerged, typha, tyhyd).
+
+Two measurements were dropped due to inaccurate oxygen level readings (DO_mg_L 22.7 and 22.3). Both of these readings were taken on Septemeber 10, 2020 about 45 minutes apart and both dropped readings were from the treatment meadow. This means that all treatments and time points have 8 measurements each except for meadow at the second time point which has only 6 measurements because of the readings dropped based on inaccurate oxygen level readings. This leaves us with a total of 62 observations
+that were ultimately used for analysis.
 
 <!-- % latex table generated in R 4.4.0 by xtable 1.8-4 package -->
+
 <!-- % Fri Sep 13 12:46:31 2024 -->
 
 \begin{table}[ht]
@@ -43,8 +51,11 @@ out <- cong %>% filter(DO_mg_L <= 20) %>% group_by(Treatment, Week) %>% summariz
 #xtable(out)
 ```
 
-The table below shows coutns of insect type by treatment for the first week of measurements (rows 1-4) and the second week of measurement (rows 5-8).  A standard $\chi^2$ test for idependence of the rows and columns reject the null hypothesis in favor of the alternative for both Week 1 and Week 2.  (p-values in both cases <2e-16).
-
+The table below shows counts of insect type by treatment for the first
+week of measurements (rows 1-4) and the second week of measurement (rows
+5-8). A standard $\chi^2$ test for idependence of the rows and columns
+reject the null hypothesis in favor of the alternative for both Week 1
+and Week 2. (p-values in both cases \<2e-16).
 
 \begin{table}[ht]
 \centering
@@ -66,9 +77,6 @@ meadow & 556.00 & 102.00 & 11.00 & 217.00 & 34.00 \\
 \end{tabular}
 \caption{Week 1 and week 2.  The p-value for the chi squared test for both weeks is essentially zero. }
 \end{table}
-
-
-
 
 ```{r echo = FALSE, message = FALSE}
 library(rjags)
@@ -135,15 +143,13 @@ row.names(tab) <- c(rownames)
 chisq.test(tab)
 ```
 
+# Some EDA stuff
 
-
-# Some EDA stuff 
 ```{r}
 #Data viz
 ggdat <- cong %>% select(Treatment, n_col, n_shr, n_pie, n_scr, n_pre) %>% pivot_longer(names_to = "Category", cols = c("n_col","n_shr","n_pie","n_scr","n_pre"))
-ggplot(aes(fill = Category, x = Treatment, y = value), data = ggdat) + geom_bar(position="fill", stat="identity")
+ggplot(aes(fill = Category, x = Treatment, y = value), data = ggdat) + geom_bar(position="fill", stat="identity") + scale_fill_discrete(labels = c("Collector","Piercer","Predator","Scraper","Shredder")) + theme_bw() + ylab("Proportion")
 ```
-
 
 ```{r}
 #EDA
@@ -161,40 +167,53 @@ cong %>% group_by(Treatment) %>% summarize()
 
 ```
 
-
-
-
 # Methods
-A Bayesian multinomial mixed effects model was estimated from the data with the vector of insect counts as the response variable.  Fixed effects included in the model were indicators for treatment (with submerged chosen as the baseline level), Water temperature, Veg_H, and an indicator for week (with week 1 chosen as baseline).  Finally, a random intercept for site was included due to the repeated measures at sites several weeks apart.
 
-Formally, let $Y_{ijt}$ be the count of insects at location $i = 1, cdots, 32$ in insect category $j = 1, \cdots, 5$ and time $t = 1,2$.  We then model the vector of counts as each location and time as a multinomial distribution: 
+A Bayesian multinomial mixed effects model was estimated from the data
+with the vector of insect counts as the response variable. Fixed effects
+included in the model were indicators for treatment (with submerged
+chosen as the baseline level), Water temperature, Veg_H, and an
+indicator for week (with week 1 chosen as baseline). Finally, a random
+intercept for site was included due to the repeated measures at sites
+several weeks apart.
+
+Formally, let $Y_{ijt}$ be the count of insects at location
+$i = 1, cdots, 32$ in insect category $j = 1, \cdots, 5$ and time
+$t = 1,2$. We then model the vector of counts as each location and time
+as a multinomial distribution:
 
 $$
 Y_{i.t} \sim MN(n_{it},p_{it}),
-$$
-with 
-$$
+$$ with $$
 p_{ijt} = \frac{\theta_{ijt}}{1 + \sum_{j = 1}^{J-1} \theta_{ijt}}
-$$
-for $j = 1,\cdots, 4$ and we choose the remaining one level of insect category to be baseline so that
+$$ for $j = 1,\cdots, 4$ and we choose the remaining one level of insect
+category to be baseline so that
 
 $$
 p_{iJt} = \frac{1}{1 + \sum_{j = 1}^{J-1} \theta_{ijt}}.
-$$
-We then include covariates and a random intercept.  
+$$ We then include covariates and a random intercept.\
 $$
 \log(\theta_{ijt}) =  X_{it}\beta_{j} + b_{ij}
-$$
-Priors for $\beta_{j}$ were all chosen to be normal distributions centered at 0 with large variance and the prior for $\sigma^2_b = var(b_{ij})$ was chosen to be a truncated normal with large variance.  
+$$ Priors for $\beta_{j}$ were all chosen to be normal distributions
+centered at 0 with large variance and the prior for
+$\sigma^2_b = var(b_{ij})$ was chosen to be a truncated normal with
+large variance.
 
-A burn-in of 1000 iterations was used in the MCMC and then 200000 samples were drawn from the posterior distribution with a thinning value of 200 due to a large autocorrelation between draws.  This ultimately leaves us with 1000 posterior draws from each chain across 3 chains for a total of 3000 posterior draws.  The model was implemented using rjags (Citation).  
+A burn-in of 1000 iterations was used in the MCMC and then 200000
+samples were drawn from the posterior distribution with a thinning value
+of 200 due to a large autocorrelation between draws. This ultimately
+leaves us with 1000 posterior draws from each chain across 3 chains for
+a total of 3000 posterior draws. The model was implemented using rjags
+(Citation).
 
-# Results 
+# Results
+
 ```{r echo = FALSE}
 load("/Users/gregorymatthews/Dropbox/bug_hotels/z_20240417.RData")
 ```
 
 # Posterior estimates for $\beta$
+
 ```{r echo = FALSE}
 datbeta <- data.frame(treatment = rep(c("meadow","typhd","typha"), each = 4*3000), 
                    category = rep(c("p_col", "p_shr", "p_pie", "p_scr"),each = 3000),
@@ -216,14 +235,39 @@ datbeta <- data.frame(treatment = rep(c("meadow","typhd","typha"), each = 4*3000
 
 ggplot(aes(x = beta), data = datbeta) + geom_density() + facet_grid(treatment ~ category) + geom_vline(xintercept = 0) + ggtitle("All relative to Submerged")
 ```
+# Posterior estimates for $e^{\beta}$
 
-Figure XXX displays the posterior shows the density of the posterior draws for the regression coefficients with the reference treatment level chosen to be submerged.  
+```{r echo = FALSE}
+datbeta_OR <- data.frame(treatment = rep(c("meadow","typhd","typha"), each = 4*3000), 
+                   category = rep(c("p_col", "p_shr", "p_pie", "p_scr"),each = 3000),
+    beta = exp(c(c(z$beta[2,1,,1],z$beta[2,1,,2],z$beta[2,1,,3]),
+           c(z$beta[2,2,,1],z$beta[2,2,,2],z$beta[2,2,,3]),
+           c(z$beta[2,3,,1],z$beta[2,3,,2],z$beta[2,3,,3]),
+           c(z$beta[2,4,,1],z$beta[2,4,,2],z$beta[2,4,,3]),
+           c(z$beta[3,1,,1],z$beta[3,1,,2],z$beta[3,1,,3]),
+           c(z$beta[3,2,,1],z$beta[3,2,,2],z$beta[3,2,,3]),
+           c(z$beta[3,3,,1],z$beta[3,3,,2],z$beta[3,3,,3]),
+           c(z$beta[3,4,,1],z$beta[3,4,,2],z$beta[3,4,,3]),
+           c(z$beta[4,1,,1],z$beta[4,1,,2],z$beta[4,1,,3]),
+           c(z$beta[4,2,,1],z$beta[4,2,,2],z$beta[4,2,,3]),
+           c(z$beta[4,3,,1],z$beta[4,3,,2],z$beta[4,3,,3]),
+           c(z$beta[4,4,,1],z$beta[4,4,,2],z$beta[4,4,,3]))
+    ))
+
+
+ggplot(aes(x = beta), data = datbeta_OR) + geom_density() + facet_grid(treatment ~ category) + geom_vline(xintercept = 1) + ggtitle("All relative to Submerged") + xlim(0,3)
+```
+
+Figure XXX displays the posterior shows the density of the posterior
+draws for the regression coefficients with the reference treatment level
+chosen to be submerged.
 
 ```{r}
 load("/Users/gregorymatthews/Dropbox/bug_hotels/z_20240417.RData")
 ```
 
 # Posterior estimates for $\beta$
+
 ```{r echo = FALSE}
 datbeta <- data.frame(treatment = rep(c("meadow","typhd","typha"), each = 4*3000), 
                    category = rep(c("p_col", "p_shr", "p_pie", "p_scr"),each = 3000),
@@ -255,11 +299,33 @@ summ <- datbeta %>% group_by(treatment, category) %>% summarize(mean(beta > 0))
 summ
 ```
 
+```{r}
+summ <- datbeta %>% group_by(treatment, category) %>% summarize(OR_post_mean = mean(exp(beta)),
+  OR_post_mean_LB = quantile(exp(beta),0.025),
+  OR_post_mean_UB = quantile(exp(beta),0.975)
+                                                                )
+summ
+```
+
 # Posterior estimates for p
+
 ```{r echo = FALSE}
 #Plot with 4 rows for each Treatment.  
 #And then posterior density plots for each of the categories.
 #Using the average level of the random effect, Average Do_mg_L, and Week 0.  
+################################################################################
+#Submerged is a better choice for baseline!!!!
+################################################################################
+cong  <- cong %>% mutate(I_meadow = ifelse(Treatment == "meadow",1,0),
+                         I_submerged = ifelse(Treatment == "submerged",1,0),
+                         I_tyhyd = ifelse(Treatment == "tyhyd",1,0),
+                         I_typha = ifelse(Treatment == "typha",1,0),
+                         I_week = ifelse(Week == "W1",0,1))
+
+X <- cong %>% select(I_meadow, I_tyhyd, I_typha, DO_mg_L, Water_Temp_C,Veg_H, I_week)
+#X <- cong %>% select(I_meadow,I_submerged, I_tyhyd, I_typha,DO_mg_L)
+X <- data.frame(int = 1,as.matrix(X))
+
 #Find p vectors with average levels 
 newX <- X[1:4,]
 newX[1:4,2:4] <- 0
@@ -292,81 +358,61 @@ results$chain <- rep(1:3, each = 1000)
 ggplot(aes(x = p, y = after_stat(scaled), color = category), data = results) + geom_density() + facet_wrap(~treatment ) +ggtitle("oxygen = 1") + theme_bw()
 ```
 
-Figure YYY shows the posterior distributions of the estimated proportions of the different categories of insects in each of the treatment types with water temperature and Veg H held constant at their means, week fixed at week 1, and dissolved Oxygen set to be 1 (units?).  Across all treatments piercers, predators, and scrapers are relatively rare (all posterior means below 10\%) with the exception of scrapers in meadow (posterior mean 10.4\%) and predators in typhd (posterior mean 13.4\%).  In all four treatments, shredders and collectors dominate the observed proportions of insects.  In treatments typha and typhd, the proportions of shredders and collectors makes up the majority of the observed insects with both groups having posterior means near 50\% for shredders and posterior means of 40.4\% and 32.0\% for typha an typhd, repsectively.  Both submerged and meadow are dominated by collectors with meadow being nearly completely dominated by collectors (posterior mean of 83.4\%) and submerged having a posterior mean around 70\% for collectors with shredders making up most of the rest of the insects observed in this treatment group (posterior mean 22.1\%).  
+Figure YYY shows the posterior distributions of the estimated
+proportions of the different categories of insects in each of the
+treatment types with water temperature and Veg H held constant at their
+means, week fixed at week 1, and dissolved Oxygen set to be 1 (units?).
+Across all treatments piercers, predators, and scrapers are relatively
+rare (all posterior means below 10%) with the exception of scrapers in
+meadow (posterior mean 10.4%) and predators in typhd (posterior mean
+13.4%). In all four treatments, shredders and collectors dominate the
+observed proportions of insects. In treatments typha and typhd, the
+proportions of shredders and collectors makes up the majority of the
+observed insects with both groups having posterior means near 50% for
+shredders and posterior means of 40.4% and 32.0% for typha an typhd,
+repsectively. Both submerged and meadow are dominated by collectors with
+meadow being nearly completely dominated by collectors (posterior mean
+of 83.4%) and submerged having a posterior mean around 70% for
+collectors with shredders making up most of the rest of the insects
+observed in this treatment group (posterior mean 22.1%).
 
+```         
+    trt1      trt2       auc
+```
 
-        trt1      trt2       auc
-1     meadow submerged 0.9986481
-2     meadow     typha 0.9999911
-3     meadow     typhd 0.9999982
-4  submerged     typha 0.9315948
-5  submerged     typhd 0.9873400
-6      typha     typhd 0.9611458
-7     meadow submerged 0.9986481
-8     meadow     typha 0.9999911
-9     meadow     typhd 0.9999982
-10 submerged     typha 0.9315948
-11 submerged     typhd 0.9873400
-12     typha     typhd 0.9611458
-
+1 meadow submerged 0.9986481 2 meadow typha 0.9999911 3 meadow typhd
+0.9999982 4 submerged typha 0.9315948 5 submerged typhd 0.9873400 6
+typha typhd 0.9611458 7 meadow submerged 0.9986481 8 meadow typha
+0.9999911 9 meadow typhd 0.9999982 10 submerged typha 0.9315948 11
+submerged typhd 0.9873400 12 typha typhd 0.9611458
 
 # A tibble: 4 × 6
-  treatment p_col   p_pie  p_pre   p_scr  p_shr
-  <chr>     <dbl>   <dbl>  <dbl>   <dbl>  <dbl>
-1 meadow    0.834 0.0225  0.0175 0.104   0.0222
-2 submerged 0.696 0.0320  0.0422 0.00891 0.221 
-3 typha     0.404 0.0367  0.0456 0.0214  0.492 
-4 typhd     0.320 0.00940 0.134  0.0264  0.509 
 
+treatment p_col p_pie p_pre p_scr p_shr <chr> <dbl> <dbl> <dbl> <dbl>
+<dbl> 1 meadow 0.834 0.0225 0.0175 0.104 0.0222 2 submerged 0.696 0.0320
+0.0422 0.00891 0.221 3 typha 0.404 0.0367 0.0456 0.0214 0.492 4 typhd
+0.320 0.00940 0.134 0.0264 0.509
 
-
-
-
-
-
-X <- cong %>% select(I_meadow, I_tyhyd, I_typha, DO_mg_L, Water_Temp_C,Veg_H, I_week)
-
-
+X \<- cong %\>% select(I_meadow, I_tyhyd, I_typha, DO_mg_L,
+Water_Temp_C,Veg_H, I_week)
 
 model{
 
-for (i in 1:N){
-  Y[i,] ~ dmulti(p[i,], n[i])
+for (i in 1:N){ Y[i,] \~ dmulti(p[i,], n[i])
 
-for (j in 1:(J-1)){
-  p[i,j] <- theta[i,j]/(1+sum(theta[i,]))
-}
-  p[i,J] <- 1/(1+sum(theta[i,]))
+for (j in 1:(J-1)){ p[i,j] \<- theta[i,j]/(1+sum(theta[i,])) } p[i,J]
+\<- 1/(1+sum(theta[i,]))
 
-  for (j in 1:(J-1)){
-  theta[i,j] <- exp(inprod(X[i,], beta[,j]) + inprod(Z[i,], b[,j]))
-  }
- 
- 
- 
-}
- 
- 
-for (d in 1:Dx) {
-  for (j in 1:(J-1)){
-    beta[d, j] ~ dnorm(0, 0.001)
-  }
+for (j in 1:(J-1)){ theta[i,j] \<- exp(inprod(X[i,], beta[,j]) +
+inprod(Z[i,], b[,j])) }
+
 }
 
-for (d in 1:Dz) {
-  for (j in 1:(J-1)){
-    b[d, j] ~ dnorm(0, tau2b)
-  }
-}
+for (d in 1:Dx) { for (j in 1:(J-1)){ beta[d, j] \~ dnorm(0, 0.001) } }
 
-tau2b <- 1/sigma2b
-sigma2b ~  dnorm(0, 0.001)T(0,10000)
- 
- 
+for (d in 1:Dz) { for (j in 1:(J-1)){ b[d, j] \~ dnorm(0, tau2b) } }
 
-
-
-
+tau2b \<- 1/sigma2b sigma2b \~ dnorm(0, 0.001)T(0,10000)
 
 ```{r echo = FALSE}
 #Bayes stuff
@@ -476,6 +522,7 @@ load("/Users/gregorymatthews/Dropbox/bug_hotels/z_20240417.RData")
 ```
 
 # Posterior estimates for $\beta$
+
 ```{r echo = FALSE}
 datbeta <- data.frame(treatment = rep(c("meadow","typhd","typha"), each = 4*3000), 
                    category = rep(c("p_col", "p_shr", "p_pie", "p_scr"),each = 3000),
@@ -504,6 +551,7 @@ ggplot(aes(x = beta), data = datbeta) + geom_density() + facet_grid(treatment ~ 
 
 ```{r}
 #Should I be doing with the probablities of the betas directly? because the p's depend on covariates
+trt <- c("meadow", "typhd","typha")
 test <- data.frame(p_col  = datbeta %>% filter(category == "p_col"),
            p_shr  = datbeta %>% filter(category == "p_shr"),
            p_pie  = datbeta %>% filter(category == "p_pie"),
@@ -544,6 +592,7 @@ summ
 ```
 
 # Posterior estimates for p
+
 ```{r echo = FALSE}
 #Plot with 4 rows for each Treatment.  
 #And then posterior density plots for each of the categories.
@@ -555,6 +604,7 @@ diag(newX[2:4,2:4]) <- 1
 newX$DO_mg_L <- 1
 newX$Water_Temp_C <- mean(X$Water_Temp_C)
 newX$Veg_H <- mean(X$Veg_H)
+
 
 
 #4 treatments, 5 categories 
@@ -578,9 +628,16 @@ results$chain <- rep(1:3, each = 1000)
 
 
 ggplot(aes(x = p, y = after_stat(scaled), color = category), data = results) + geom_density() + facet_wrap(~treatment ) +ggtitle("oxygen = 1") + theme_bw()
+
+#Figure W
+results %>% 
+  group_by(category, treatment) %>% 
+  summarize(mn = mean(p), 
+            lower = quantile(p,0.025),
+              upper = quantile(p, 0.975))
 ```
 
-```{r echo = FALSE}
+```{r echo = FALSE, eval = FALSE}
 #Plot with 4 rows for each Treatment.  
 #And then posterior density plots for each of the categories.
 #Using the average level of the random effect, Average Do_mg_L, and Week 0.  
@@ -616,8 +673,6 @@ results$chain <- rep(1:3, each = 1000)
 ggplot(aes(x = p, y = after_stat(scaled), color = category), data = results) + geom_density() + facet_wrap(~treatment ) + ggtitle("average values of covariates")
 ```
 
-
-
 ```{r}
 trt <- c("meadow","submerged","typha","typhd")
 cat <- c("p_col","p_pie","p_pre","p_scr","p_shr")
@@ -634,9 +689,6 @@ for (t in 1:(length(trt)-1)){
 
 pdiffs %>% pivot_wider(names_from = "cat",values_from = "prob")
 ```
-
-
-
 
 ```{r}
 #Should I be doing with the probablities of the betas directly? because the p's depend on covariates
@@ -657,7 +709,12 @@ auc
 
 ```{r}
 entropy <- results %>% group_by(i,chain, treatment) %>% summarize(entropy = sum(-p*log(p)))
+
 ggplot(aes(x = entropy), data = entropy) + facet_wrap(~treatment) + geom_density()
+
+entropy %>% group_by(treatment) %>% summarize(mean(entropy), 
+                                              quantile(entropy, 0.025),
+                                              quantile(entropy, 0.975))
 ```
 
 ```{r}
@@ -666,12 +723,17 @@ ggplot(aes(x = entropy, color = treatment), data = entropy)  + geom_density()
 ```
 
 <!-- # ```{r} -->
+
 <!-- # test <- results %>% group_by(i,chain, treatment) %>% pivot_wider(names_from = "treatment", values_from = p) %>% group_by(i,chain) %>% mutate(sub_vs_mead = log(submerged) - log(meadow))  -->
+
 <!-- #  -->
+
 <!-- # test -->
+
 <!-- # ``` -->
 
 # Posterior probabilities for p
+
 ```{r}
 d <- data.frame()
 for (cat in c("p_col", "p_shr", "p_pie", "p_scr","p_pre")){
@@ -686,6 +748,7 @@ d
 ```
 
 # Posterior means and 95% credible intervals for p
+
 ```{r}
 #Posterior means with 95% credible intervals
 results %>% 
@@ -696,9 +759,12 @@ results %>%
 test <- results %>% 
   group_by(category, treatment) %>% 
   summarize(mean = mean(p)) %>% pivot_wider(names_from = category, values_from = mean) 
+
+test
 ```
 
-# Varibility between different plots.  
+# Varibility between different plots.
+
 ```{r}
 ggdat <- data.frame(sigma2b = c(z$sigma2b[,,1],z$sigma2b[,,2],z$sigma2b[,,3]))
 ggplot(aes(x = sigma2b), data = ggdat) + geom_density() 
