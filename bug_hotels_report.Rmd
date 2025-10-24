@@ -8,6 +8,7 @@ editor_options:
     wrap: 72
 ---
 
+<!-- Manuscript: 9/30/25: https://loyolauniversitychicago.sharepoint.com/:w:/r/sites/TeamTyphaSP23-WI24/_layouts/15/Doc.aspx?sourcedoc=%7BEF3D48BB-B213-47D3-8EFF-8DB7A139EE17%7D&file=Manuscript_WorkingDraft_9_30_25.docx&fromShare=true&action=default&mobileredirect=true -->
 <!-- Manuscript: https://loyolauniversitychicago.sharepoint.com/:w:/r/sites/TeamTyphaSP23-WI24/_layouts/15/Doc.aspx?sourcedoc=%7B4DCE1BDD-6EE8-4A4B-A3CE-1A86352890AB%7D&file=Manuscript_WorkingDraft_10_17_24.docx&action=default&mobileredirect=true -->
 
 ```{r setup, include=FALSE}
