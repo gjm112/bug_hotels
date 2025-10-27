@@ -190,7 +190,7 @@ z <- jags.samples(jags,c('beta','b',"sigmab","sigma"),200000, thin = 200)
 #z <- jags.samples(jags,c('beta','b',"sigma2b","sigma"),200000, thin = 200)
 
 save(z, file = "/Users/gregorymatthews/Dropbox/bug_hotels/z_Inv_biomass_mg_20250929.RData")
-load("/Users/gregorymatthews/Dropbox/bug_hotels/z_Inv_biomass_mg_20250929.RData")
+load("z_Inv_biomass_mg_20250929.RData")
 
 plot(z$beta[2,,1], type = "l")
 points(z$beta[2,,2], type = "l", col = "red")
@@ -205,23 +205,24 @@ hist(z$beta[2,,1:3] - z$beta[3,,1:3]) #meadow vs tyhyd
 hist(z$beta[2,,1:3] - z$beta[4,,1:3]) #meadow vs typha
 hist(z$beta[3,,1:3] - z$beta[4,,1:3]) #tyhyd vs typha
 
-dat_beta_post  <- rbind(data.frame(beta = c(z$beta[2,,1:3]), Treatment = "meadow", Baseline = "submerged"),
-      data.frame(beta = c(z$beta[3,,1:3]), Treatment = "tyhyd", Baseline = "submerged"),
-      data.frame(beta = c(z$beta[4,,1:3]), Treatment = "typha", Baseline = "submerged"),
-      data.frame(beta = c(z$beta[2,,1:3] - z$beta[3,,1:3]), Treatment = "meadow", Baseline = "tyhyd"),
-      data.frame(beta = c(z$beta[2,,1:3] - z$beta[4,,1:3]), Treatment = "meadow", Baseline = "typha"),
-      data.frame(beta = c(z$beta[3,,1:3] - z$beta[4,,1:3]), Treatment = "tyhyd", Baseline = "typha"))
+dat_beta_post  <- rbind(data.frame(beta = c(z$beta[2,,1:3]), Treatment = "Meadow", Baseline = "Submerged"),
+      data.frame(beta = c(z$beta[3,,1:3]), Treatment = "Typhd", Baseline = "Submerged"),
+      data.frame(beta = c(z$beta[4,,1:3]), Treatment = "Typha", Baseline = "Submerged"),
+      data.frame(beta = c(z$beta[2,,1:3] - z$beta[3,,1:3]), Treatment = "Meadow", Baseline = "Typhd"),
+      data.frame(beta = c(z$beta[2,,1:3] - z$beta[4,,1:3]), Treatment = "Meadow", Baseline = "Typha"),
+      data.frame(beta = c(z$beta[3,,1:3] - z$beta[4,,1:3]), Treatment = "Typhd", Baseline = "Typha"))
 dat_beta_post$Treatment <- as.factor(dat_beta_post$Treatment)
 dat_beta_post$Baseline <- as.factor(dat_beta_post$Baseline)
-dat_beta_post$Baseline <- fct_relevel(dat_beta_post$Baseline, "tyhyd", "typha", "submerged")
-ggplot(aes(x = beta),data = dat_beta_post) + facet_grid(Treatment ~ Baseline) + geom_density() + geom_vline(xintercept =  0, col = "red")
-
+dat_beta_post$Treatment <- fct_relevel(dat_beta_post$Treatment, "Meadow","Typhd", "Typha")
+dat_beta_post$Baseline <- fct_relevel(dat_beta_post$Baseline, "Typhd", "Typha", "Submerged")
+ggplot(aes(x = beta),data = dat_beta_post) + facet_grid(Treatment ~ Baseline) + geom_density() + geom_vline(xintercept =  0, col = "red") + xlab(expression(beta)) + ylab("")
+ggsave("FigureA1.pdf",height=5,width=8)
 
 dat_beta_post %>% group_by(Treatment, Baseline) %>% 
   summarize(p_beta_gt0 = mean(beta>0), 
             post_mean_beta = mean(beta),
-            beta_cred_lower90 = quantile(beta, 0.05),
-            beta_cred_upper90 = quantile(beta, 0.95))
+            beta_cred_lower95 = quantile(beta, 0.025),
+            beta_cred_upper95 = quantile(beta, 0.975))
 
 
 hist(z$sigmab)
@@ -313,7 +314,7 @@ z <- jags.samples(jags,c('beta','b',"sigmab","sigma"),200000, thin = 200)
 #z <- jags.samples(jags,c('beta','b',"sigma2b","sigma"),200000, thin = 200)
 
 save(z, file = "/Users/gregorymatthews/Dropbox/bug_hotels/z_Inv_Rich_20250929.RData")
-load("/Users/gregorymatthews/Dropbox/bug_hotels/z_Inv_Rich_20250929.RData")
+load("z_Inv_Rich_20250929.RData")
 
 hist(z$sigmab)
 
@@ -330,22 +331,24 @@ hist(z$beta[2,,1:3] - z$beta[3,,1:3]) #meadow vs tyhyd
 hist(z$beta[2,,1:3] - z$beta[4,,1:3]) #meadow vs typha
 hist(z$beta[3,,1:3] - z$beta[4,,1:3]) #tyhyd vs typha
 
-dat_beta_post  <- rbind(data.frame(beta = c(z$beta[2,,1:3]), Treatment = "meadow", Baseline = "submerged"),
-                        data.frame(beta = c(z$beta[3,,1:3]), Treatment = "tyhyd", Baseline = "submerged"),
-                        data.frame(beta = c(z$beta[4,,1:3]), Treatment = "typha", Baseline = "submerged"),
-                        data.frame(beta = c(z$beta[2,,1:3] - z$beta[3,,1:3]), Treatment = "meadow", Baseline = "tyhyd"),
-                        data.frame(beta = c(z$beta[2,,1:3] - z$beta[4,,1:3]), Treatment = "meadow", Baseline = "typha"),
-                        data.frame(beta = c(z$beta[3,,1:3] - z$beta[4,,1:3]), Treatment = "tyhyd", Baseline = "typha"))
+dat_beta_post  <- rbind(data.frame(beta = c(z$beta[2,,1:3]), Treatment = "Meadow", Baseline = "Submerged"),
+                        data.frame(beta = c(z$beta[3,,1:3]), Treatment = "Typhd", Baseline = "Submerged"),
+                        data.frame(beta = c(z$beta[4,,1:3]), Treatment = "Typha", Baseline = "Submerged"),
+                        data.frame(beta = c(z$beta[2,,1:3] - z$beta[3,,1:3]), Treatment = "Meadow", Baseline = "Typhd"),
+                        data.frame(beta = c(z$beta[2,,1:3] - z$beta[4,,1:3]), Treatment = "Meadow", Baseline = "Typha"),
+                        data.frame(beta = c(z$beta[3,,1:3] - z$beta[4,,1:3]), Treatment = "Typhd", Baseline = "Typha"))
 dat_beta_post$Treatment <- as.factor(dat_beta_post$Treatment)
 dat_beta_post$Baseline <- as.factor(dat_beta_post$Baseline)
-dat_beta_post$Baseline <- fct_relevel(dat_beta_post$Baseline, "tyhyd", "typha", "submerged")
-ggplot(aes(x = beta),data = dat_beta_post) + facet_grid(Treatment ~ Baseline) + geom_density() + geom_vline(xintercept =  0, col = "red")
+dat_beta_post$Treatment <- fct_relevel(dat_beta_post$Treatment, "Meadow","Typhd", "Typha")
+dat_beta_post$Baseline <- fct_relevel(dat_beta_post$Baseline, "Typhd", "Typha", "Submerged")
+ggplot(aes(x = beta),data = dat_beta_post) + facet_grid(Treatment ~ Baseline) + geom_density() + geom_vline(xintercept =  0, col = "red") + xlab(expression(beta)) + ylab("")
+ggsave("FigureA2.pdf",height=5,width=8)
 
 dat_beta_post %>% group_by(Treatment, Baseline) %>% 
   summarize(p_beta_gt0 = mean(beta>0), 
             post_mean_beta = mean(beta),
-            beta_cred_lower90 = quantile(beta, 0.05),
-            beta_cred_upper90 = quantile(beta, 0.95))
+            beta_cred_lower95 = quantile(beta, 0.025),
+            beta_cred_upper95 = quantile(beta, 0.975))
 
 hist(z$sigmab)
 
@@ -437,7 +440,7 @@ z <- jags.samples(jags,c('beta','b',"sigmab","sigma"),200000, thin = 200)
 #z <- jags.samples(jags,c('beta','b',"sigma2b","sigma"),200000, thin = 200)
 
 save(z, file = "/Users/gregorymatthews/Dropbox/bug_hotels/z_Inv_Abun_20250929.RData")
-load("/Users/gregorymatthews/Dropbox/bug_hotels/z_Inv_Abun_20250929.RData")
+load("z_Inv_Abun_20250929.RData")
 
 hist(z$sigmab)
 
@@ -454,22 +457,24 @@ hist(z$beta[2,,1:3] - z$beta[3,,1:3]) #meadow vs tyhyd
 hist(z$beta[2,,1:3] - z$beta[4,,1:3]) #meadow vs typha
 hist(z$beta[3,,1:3] - z$beta[4,,1:3]) #tyhyd vs typha
 
-dat_beta_post  <- rbind(data.frame(beta = c(z$beta[2,,1:3]), Treatment = "meadow", Baseline = "submerged"),
-                        data.frame(beta = c(z$beta[3,,1:3]), Treatment = "tyhyd", Baseline = "submerged"),
-                        data.frame(beta = c(z$beta[4,,1:3]), Treatment = "typha", Baseline = "submerged"),
-                        data.frame(beta = c(z$beta[2,,1:3] - z$beta[3,,1:3]), Treatment = "meadow", Baseline = "tyhyd"),
-                        data.frame(beta = c(z$beta[2,,1:3] - z$beta[4,,1:3]), Treatment = "meadow", Baseline = "typha"),
-                        data.frame(beta = c(z$beta[3,,1:3] - z$beta[4,,1:3]), Treatment = "tyhyd", Baseline = "typha"))
+dat_beta_post  <- rbind(data.frame(beta = c(z$beta[2,,1:3]), Treatment = "Meadow", Baseline = "Submerged"),
+                        data.frame(beta = c(z$beta[3,,1:3]), Treatment = "Typhd", Baseline = "Submerged"),
+                        data.frame(beta = c(z$beta[4,,1:3]), Treatment = "Typha", Baseline = "Submerged"),
+                        data.frame(beta = c(z$beta[2,,1:3] - z$beta[3,,1:3]), Treatment = "Meadow", Baseline = "Typhd"),
+                        data.frame(beta = c(z$beta[2,,1:3] - z$beta[4,,1:3]), Treatment = "Meadow", Baseline = "Typha"),
+                        data.frame(beta = c(z$beta[3,,1:3] - z$beta[4,,1:3]), Treatment = "Typhd", Baseline = "Typha"))
 dat_beta_post$Treatment <- as.factor(dat_beta_post$Treatment)
 dat_beta_post$Baseline <- as.factor(dat_beta_post$Baseline)
-dat_beta_post$Baseline <- fct_relevel(dat_beta_post$Baseline, "tyhyd", "typha", "submerged")
-ggplot(aes(x = beta),data = dat_beta_post) + facet_grid(Treatment ~ Baseline) + geom_density() + geom_vline(xintercept =  0, col = "red")
+dat_beta_post$Treatment <- fct_relevel(dat_beta_post$Treatment, "Meadow","Typhd", "Typha")
+dat_beta_post$Baseline <- fct_relevel(dat_beta_post$Baseline, "Typhd", "Typha", "Submerged")
+ggplot(aes(x = beta),data = dat_beta_post) + facet_grid(Treatment ~ Baseline) + geom_density() + geom_vline(xintercept =  0, col = "red") + xlab(expression(beta)) + ylab("")
+ggsave("FigureA3.pdf",height=5,width=8)
 
 dat_beta_post %>% group_by(Treatment, Baseline) %>% 
   summarize(p_beta_gt0 = mean(beta>0), 
             post_mean_beta = mean(beta),
-            beta_cred_lower90 = quantile(beta, 0.05),
-            beta_cred_upper90 = quantile(beta, 0.95))
+            beta_cred_lower95 = quantile(beta, 0.025),
+            beta_cred_upper95 = quantile(beta, 0.975))
 
 hist(z$sigmab)
 

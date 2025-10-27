@@ -83,7 +83,7 @@ meadow & 556.00 & 102.00 & 11.00 & 217.00 & 34.00 \\
 library(rjags)
 library(ggmosaic)
 library(tidyverse)
-cong <- read.csv("/Users/gregorymatthews/Dropbox/bug_hotels/data/cong_master.csv")
+cong <- read.csv("data/cong_master.csv")
 cong %>% group_by(Week, Date) %>% summarize(n = n())
 cong %>% group_by(Plot) %>% summarize(n = n()) 
 
@@ -210,14 +210,14 @@ a total of 3000 posterior draws. The model was implemented using rjags
 # Results
 
 ```{r echo = FALSE}
-load("/Users/gregorymatthews/Dropbox/bug_hotels/z_20240417.RData")
+load("z_20240417.RData")
 ```
 
 # Posterior estimates for $\beta$
 
 ```{r echo = FALSE}
-datbeta <- data.frame(treatment = rep(c("meadow","typhd","typha"), each = 4*3000), 
-                   category = rep(c("p_col", "p_shr", "p_pie", "p_scr"),each = 3000),
+datbeta <- data.frame(treatment = rep(c("Meadow","Typhd","Typha"), each = 4*3000), 
+                   category = rep(c("Collector", "Shredder", "Piercer", "Scraper"),each = 3000),
     beta = c(c(z$beta[2,1,,1],z$beta[2,1,,2],z$beta[2,1,,3]),
            c(z$beta[2,2,,1],z$beta[2,2,,2],z$beta[2,2,,3]),
            c(z$beta[2,3,,1],z$beta[2,3,,2],z$beta[2,3,,3]),
@@ -234,7 +234,8 @@ datbeta <- data.frame(treatment = rep(c("meadow","typhd","typha"), each = 4*3000
     )
 
 
-ggplot(aes(x = beta), data = datbeta) + geom_density() + facet_grid(treatment ~ category) + geom_vline(xintercept = 0) + ggtitle("All relative to Submerged")
+ggplot(aes(x = beta), data = datbeta) + geom_density() + facet_grid(treatment ~ category) + geom_vline(xintercept = 0) + xlab(expression(beta)) + ylab("") # + ggtitle("All relative to Submerged")
+ggsave("FigureY.pdf",height=5,width=8)
 ```
 # Posterior estimates for $e^{\beta}$
 
@@ -301,7 +302,7 @@ summ
 ```
 
 ```{r}
-summ <- datbeta %>% group_by(treatment, category) %>% summarize(OR_post_mean = mean(exp(beta)),
+summ <- datbeta %>% group_by(treatment, category) %>% summarize(OR_post_mean = quantile(exp(beta),0.5),
   OR_post_mean_LB = quantile(exp(beta),0.025),
   OR_post_mean_UB = quantile(exp(beta),0.975)
                                                                 )
@@ -340,13 +341,13 @@ newX$Veg_H <- mean(X$Veg_H)
 results1 <- results2 <- results3 <- list()
 for (i in 1:1000){
   results1[[i]] <-
-    data.frame(category = rep(c("p_col", "p_shr", "p_pie", "p_scr", "p_pre"),4),                treatment = rep(c("submerged","meadow","typhd","typha"),each = 5),
+    data.frame(Category = rep(c("Collector","Shredder","Piercer","Scraper","Predator"),4),                treatment = rep(c("Submerged","Meadow","Typhd","Typha"),each = 5),
                p = c(apply(cbind(exp(as.matrix(newX) %*% z$beta[,,i,1]),1),1,function(x) {x / sum(x)})))
 
-results2[[i]] <- data.frame(category = rep(c("p_col", "p_shr", "p_pie", "p_scr", "p_pre"),4),                treatment = rep(c("submerged","meadow","typhd","typha"),each = 5),
+results2[[i]] <- data.frame(Category = rep(c("Collector","Shredder","Piercer","Scraper","Predator"),4),                treatment = rep(c("Submerged","Meadow","Typhd","Typha"),each = 5),
                p = c(apply(cbind(exp(as.matrix(newX) %*% z$beta[,,i,1]),2),1,function(x) {x / sum(x)})))
 
-results3[[i]] <- data.frame(category = rep(c("p_col", "p_shr", "p_pie", "p_scr", "p_pre"),4),                treatment = rep(c("submerged","meadow","typhd","typha"),each = 5),
+results3[[i]] <- data.frame(Category = rep(c("Collector","Shredder","Piercer","Scraper","Predator"),4),                treatment = rep(c("Submerged","Meadow","Typhd","Typha"),each = 5),
                p = c(apply(cbind(exp(as.matrix(newX) %*% z$beta[,,i,3]),1),1,function(x) {x / sum(x)})))
 }
 
@@ -356,7 +357,16 @@ results$i <- rep(1:1000,each= 20)
 results$chain <- rep(1:3, each = 1000)
 
 
-ggplot(aes(x = p, y = after_stat(scaled), color = category), data = results) + geom_density() + facet_wrap(~treatment ) +ggtitle("oxygen = 1") + theme_bw()
+ggplot(aes(x = p, y = after_stat(scaled), color = Category), data = results) + geom_density() + facet_wrap(~treatment )  + theme_bw() + ylab("") # +ggtitle("oxygen = 1")
+ggsave("FigureZ.pdf",height=5,width=8)
+
+summ <- results %>% 
+  group_by(treatment,Category) %>% 
+  summarize(OR_post_mean = mean(p),
+            OR_post_mean_LB = quantile(p,0.025),
+  OR_post_mean_UB = quantile(p,0.975)
+)
+summ
 ```
 
 Figure YYY shows the posterior distributions of the estimated
@@ -516,162 +526,6 @@ z <- jags.samples(jags,c('beta','p','b',"sigma2b"),200000, thin = 200)
 
 #save(z, file = "/Users/gregorymatthews/Dropbox/bug_hotels/z.RData")
 
-```
-
-```{r echo = FALSE}
-load("/Users/gregorymatthews/Dropbox/bug_hotels/z_20240417.RData")
-```
-
-# Posterior estimates for $\beta$
-
-```{r echo = FALSE}
-datbeta <- data.frame(treatment = rep(c("meadow","typhd","typha"), each = 4*3000), 
-                   category = rep(c("p_col", "p_shr", "p_pie", "p_scr"),each = 3000),
-    beta = c(c(z$beta[2,1,,1],z$beta[2,1,,2],z$beta[2,1,,3]),
-           c(z$beta[2,2,,1],z$beta[2,2,,2],z$beta[2,2,,3]),
-           c(z$beta[2,3,,1],z$beta[2,3,,2],z$beta[2,3,,3]),
-           c(z$beta[2,4,,1],z$beta[2,4,,2],z$beta[2,4,,3]),
-           c(z$beta[3,1,,1],z$beta[3,1,,2],z$beta[3,1,,3]),
-           c(z$beta[3,2,,1],z$beta[3,2,,2],z$beta[3,2,,3]),
-           c(z$beta[3,3,,1],z$beta[3,3,,2],z$beta[3,3,,3]),
-           c(z$beta[3,4,,1],z$beta[3,4,,2],z$beta[3,4,,3]),
-           c(z$beta[4,1,,1],z$beta[4,1,,2],z$beta[4,1,,3]),
-           c(z$beta[4,2,,1],z$beta[4,2,,2],z$beta[4,2,,3]),
-           c(z$beta[4,3,,1],z$beta[4,3,,2],z$beta[4,3,,3]),
-           c(z$beta[4,4,,1],z$beta[4,4,,2],z$beta[4,4,,3]))
-           
-    )
-
-
-ggplot(aes(x = beta), data = datbeta) + geom_density() + facet_grid(treatment ~ category) + geom_vline(xintercept = 0) + ggtitle("All relative to Submerged")
-  
-
-
-
-```
-
-```{r}
-#Should I be doing with the probablities of the betas directly? because the p's depend on covariates
-trt <- c("meadow", "typhd","typha")
-test <- data.frame(p_col  = datbeta %>% filter(category == "p_col"),
-           p_shr  = datbeta %>% filter(category == "p_shr"),
-           p_pie  = datbeta %>% filter(category == "p_pie"),
-           p_scr  = datbeta %>% filter(category == "p_scr"),
-           p_pre  = 0)
-
-auc <- data.frame()
-for (t in 1:(length(trt)-1)){
-  for (v in (t+1):length(trt)){
-    temp <- datbeta %>% mutate(ind = rep(1:3000,12)) %>% filter(treatment %in% trt[c(t,v)]) %>% pivot_wider(names_from = category, values_from = beta)
-    if (nrow(temp == 3000)){
-    u <- runif(3000)  
-    
-      temp$p_col <- temp$p_col - u
-      temp$p_col <- temp$p_col - u
-      temp$p_col <- temp$p_col - u
-      temp$p_col <- temp$p_col - u
-      temp$p_col <- temp$p_col - u
-      
-      temp <- rbind(temp,data.frame(treatment = rep("submerged",3000),ind = 1:3000, p_col = - u, p_shr = - u, p_pie = - u, p_scr = - u)) }
-    
-    model <- glm(as.factor(treatment) ~ p_col + p_shr + p_pie + p_scr , data = temp, family = "binomial")
-
-    predictions <- predict(model, type = "response")
-library(pROC)
-auc <- rbind(auc, data.frame(trt1 = trt[t], trt2 = trt[v],
-  auc = roc(as.factor(temp$treatment), predictions)$auc))
-  }
-}
-auc
-```
-
-# Posterior probablities for $\beta > 0$
-
-```{r}
-summ <- datbeta %>% group_by(treatment, category) %>% summarize(mean(beta > 0))
-summ
-```
-
-# Posterior estimates for p
-
-```{r echo = FALSE}
-#Plot with 4 rows for each Treatment.  
-#And then posterior density plots for each of the categories.
-#Using the average level of the random effect, Average Do_mg_L, and Week 0.  
-#Find p vectors with average levels 
-newX <- X[1:4,]
-newX[1:4,2:4] <- 0
-diag(newX[2:4,2:4]) <- 1
-newX$DO_mg_L <- 1
-newX$Water_Temp_C <- mean(X$Water_Temp_C)
-newX$Veg_H <- mean(X$Veg_H)
-
-
-
-#4 treatments, 5 categories 
-results1 <- results2 <- results3 <- list()
-for (i in 1:1000){
-  results1[[i]] <-
-    data.frame(category = rep(c("p_col", "p_shr", "p_pie", "p_scr", "p_pre"),4),                treatment = rep(c("submerged","meadow","typhd","typha"),each = 5),
-               p = c(apply(cbind(exp(as.matrix(newX) %*% z$beta[,,i,1]),1),1,function(x) {x / sum(x)})))
-
-results2[[i]] <- data.frame(category = rep(c("p_col", "p_shr", "p_pie", "p_scr", "p_pre"),4),                treatment = rep(c("submerged","meadow","typhd","typha"),each = 5),
-               p = c(apply(cbind(exp(as.matrix(newX) %*% z$beta[,,i,1]),2),1,function(x) {x / sum(x)})))
-
-results3[[i]] <- data.frame(category = rep(c("p_col", "p_shr", "p_pie", "p_scr", "p_pre"),4),                treatment = rep(c("submerged","meadow","typhd","typha"),each = 5),
-               p = c(apply(cbind(exp(as.matrix(newX) %*% z$beta[,,i,3]),1),1,function(x) {x / sum(x)})))
-}
-
-results <- rbind(do.call(rbind,results1),do.call(rbind,results2),do.call(rbind,results3))
-
-results$i <- rep(1:1000,each= 20)
-results$chain <- rep(1:3, each = 1000)
-
-
-ggplot(aes(x = p, y = after_stat(scaled), color = category), data = results) + geom_density() + facet_wrap(~treatment ) +ggtitle("oxygen = 1") + theme_bw()
-
-#Figure W
-results %>% 
-  group_by(category, treatment) %>% 
-  summarize(mn = mean(p), 
-            lower = quantile(p,0.025),
-              upper = quantile(p, 0.975))
-```
-
-```{r echo = FALSE, eval = FALSE}
-#Plot with 4 rows for each Treatment.  
-#And then posterior density plots for each of the categories.
-#Using the average level of the random effect, Average Do_mg_L, and Week 0.  
-#Find p vectors with average levels 
-newX <- X[1:4,]
-newX[1:4,2:4] <- 0
-diag(newX[2:4,2:4]) <- 1
-newX$DO_mg_L <- mean(X$DO_mg_L)
-newX$Water_Temp_C <- mean(X$Water_Temp_C)
-newX$Veg_H <- mean(X$Veg_H)
-
-
-#4 treatments, 5 categories 
-results1 <- results2 <- results3 <- list()
-for (i in 1:1000){
-  results1[[i]] <-
-    data.frame(category = rep(c("p_col", "p_shr", "p_pie", "p_scr", "p_pre"),4),                treatment = rep(c("submerged","meadow","typhd","typha"),each = 5),
-               p = c(apply(cbind(exp(as.matrix(newX) %*% z$beta[,,i,1]),1),1,function(x) {x / sum(x)})))
-
-results2[[i]] <- data.frame(category = rep(c("p_col", "p_shr", "p_pie", "p_scr", "p_pre"),4),                treatment = rep(c("submerged","meadow","typhd","typha"),each = 5),
-               p = c(apply(cbind(exp(as.matrix(newX) %*% z$beta[,,i,1]),2),1,function(x) {x / sum(x)})))
-
-results3[[i]] <- data.frame(category = rep(c("p_col", "p_shr", "p_pie", "p_scr", "p_pre"),4),                treatment = rep(c("submerged","meadow","typhd","typha"),each = 5),
-               p = c(apply(cbind(exp(as.matrix(newX) %*% z$beta[,,i,3]),1),1,function(x) {x / sum(x)})))
-}
-
-results <- rbind(do.call(rbind,results1),do.call(rbind,results2),do.call(rbind,results3))
-
-results$i <- rep(1:1000,each= 20)
-results$chain <- rep(1:3, each = 1000)
-
-
-ggplot(aes(x = p, y = after_stat(scaled), color = category), data = results) + geom_density() + facet_wrap(~treatment ) + ggtitle("average values of covariates")
 ```
 
 ```{r}
