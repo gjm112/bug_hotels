@@ -348,7 +348,7 @@ dat_beta_post %>% group_by(Treatment, Baseline) %>%
   summarize(p_beta_gt0 = mean(beta>0), 
             post_mean_beta = mean(beta),
             beta_cred_lower95 = quantile(beta, 0.025),
-            beta_cred_upper95 = quantile(beta, 0.975))
+            beta_cred_upper95 = quantile(beta, 0.975)) 
 
 hist(z$sigmab)
 
@@ -380,8 +380,6 @@ for (i in 1:nrow(cong)) {
   }
 }  
 
-
-library(rjags)
 ####################################
 #Fixed and random effects
 ####################################
